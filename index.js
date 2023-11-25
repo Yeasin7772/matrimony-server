@@ -43,12 +43,37 @@ async function run() {
     })
 
 
-    // app.post('/boidatas', async(req,res)=> {
 
-    // })
+    app.get('/biodatas/filter', async (req, res) => {
+      try {
+        const { minAge, maxAge, biodataType, division } = req.query;
+    
+        //  received division
+        //console.log('division:', division);
+    
 
-
-
+        const filter = {};
+        if (minAge && maxAge) {
+          filter.age = { $gte: parseInt(minAge), $lte: parseInt(maxAge) };
+        }
+        if (biodataType) {
+          filter.type = biodataType; 
+        }
+        if (division) {
+          filter.division = division;
+        }
+    
+        //  filter
+       // console.log(' filter:', filter);
+    
+        const filteredBiodata = await boidatasCollection.find(filter).limit(20).toArray();
+        res.send(filteredBiodata);
+      } catch (error) {
+        console.error( error);
+        res.status(500).send({ error: 'Server Error' });
+      }
+    });
+    
 
 
     // Send a ping to confirm a successful connection
