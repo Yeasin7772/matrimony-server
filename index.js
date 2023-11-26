@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.o2tazeo.mongodb.net/?retryWrites=true&w=majority`;
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -17,24 +17,87 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const boidatasCollection = client.db("biodataDb").collection("boidatas");
+    const usersCollection = client.db("biodataDb").collection("users");
 
-    // all boidata  relented data
+    // jwt related api
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "5h",
+      });
+      res.send({ token });
+    });
+
+
+    // middleware 
+      const verifyToken = (req, res, next) => {
+        console.log("inside verify token", req.headers.authorization);
+        if (!req.headers.authorization) {
+          return res.status(401).send({ message: "unauthorized access" });
+        }
+  
+        const token = req.headers.authorization.split(" ")[1];
+  
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+          if (err) {
+            return res.status(401).send({ message: "unauthorized access" });
+          }
+          req.decoded = decoded;
+          next();
+        });
+      };
+
+    // user api
+
+    // make admin
+
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.get("/users",verifyToken, async (req, res) => {
+      //console.log(req.headers);
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+
+      // email checking if user exits
+      const query = { email: user.email };
+      const existingUser = await usersCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user Already exits", insertedId: null });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
 
     app.get("/boidatas", async (req, res) => {
       try {
         const result = await boidatasCollection.find().toArray();
         res.send(result);
       } catch (error) {
-        res.status(500).send({ error: " Server Error" });
+        res.status(500).send({ error: "Server Error" });
       }
     });
 
-    app.get("/biodatas/:id", async (req, res) => {
+    app.get("/biodatas/id/:id", async (req, res) => {
       const id = req.params.id;
 
       try {
@@ -49,16 +112,14 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.error("Error fetching biodata:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(500).send("Server Error");
       }
     });
 
+    // filter
     app.get("/biodatas/filter", async (req, res) => {
       try {
         const { minAge, maxAge, biodataType, division } = req.query;
-
-        //  received division
-        //console.log('division:', division);
 
         const filter = {};
         if (minAge && maxAge) {
@@ -71,9 +132,6 @@ async function run() {
           filter.division = division;
         }
 
-        //  filter
-        // console.log(' filter:', filter);
-
         const filteredBiodata = await boidatasCollection
           .find(filter)
           .limit(20)
@@ -85,16 +143,16 @@ async function run() {
       }
     });
 
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    // Ensures that the client will close when you finish/error
+    // Close the MongoDB connection when you finish
     // await client.close();
   }
 }
+
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
