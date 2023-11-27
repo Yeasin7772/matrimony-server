@@ -24,6 +24,7 @@ async function run() {
     const usersCollection = client.db("biodataDb").collection("users");
     const boidatasCollection = client.db("biodataDb").collection("boidatas");
     const favoritesCollection = client.db("biodataDb").collection("favorites");
+    const successCollection = client.db("biodataDb").collection("success");
 
     // favorites
 
@@ -32,7 +33,6 @@ async function run() {
       const result = await favoritesCollection.insertOne(item);
       res.send(result);
     });
-    
 
     app.get("/favorites", async (req, res) => {
       try {
@@ -186,6 +186,32 @@ async function run() {
       }
     });
 
+    // find email
+
+    // app.get("/biodatas/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { email: email };
+    //   const result = await boidatasCollection.findOne(query);
+    //   res.send(result);
+    // });
+
+    app.post("/biodatas", async (req, res) => {
+      const item = req.body;
+      const result = await boidatasCollection.insertOne(item);
+      res.send(result);
+    });
+
+    
+    // get success data
+
+    app.get("/success", async (req, res) => {
+      try {
+        const result = await successCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Server Error" });
+      }
+    });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
