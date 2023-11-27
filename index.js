@@ -21,8 +21,27 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
-    const boidatasCollection = client.db("biodataDb").collection("boidatas");
     const usersCollection = client.db("biodataDb").collection("users");
+    const boidatasCollection = client.db("biodataDb").collection("boidatas");
+    const favoritesCollection = client.db("biodataDb").collection("favorites");
+
+    // favorites
+
+    app.post("/favorites", async (req, res) => {
+      const item = req.body;
+      const result = await favoritesCollection.insertOne(item);
+      res.send(result);
+    });
+    
+
+    app.get("/favorites", async (req, res) => {
+      try {
+        const result = await favoritesCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Server Error" });
+      }
+    });
 
     // jwt related api
     app.post("/jwt", async (req, res) => {
@@ -69,20 +88,25 @@ async function run() {
 
     // make admin
 
-    app.patch("/users/admin/:id",verifyToken,verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
+    app.patch(
+      "/users/admin/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
 
-      const updateDoc = {
-        $set: {
-          role: "admin",
-        },
-      };
-      const result = await usersCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
+        const updateDoc = {
+          $set: {
+            role: "admin",
+          },
+        };
+        const result = await usersCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
 
-    app.get("/users", verifyToken,verifyAdmin, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       //console.log(req.headers);
       const result = await usersCollection.find().toArray();
       res.send(result);
@@ -126,23 +150,13 @@ async function run() {
       }
     });
 
-    app.get("/biodatas/id/:id", async (req, res) => {
+    app.get("/boidatas/:id", async (req, res) => {
       const id = req.params.id;
 
-      try {
-        const query = { _id: new ObjectId(id) };
-        const result = await boidatasCollection.findOne(query);
+      const query = { _id: new ObjectId(id) };
+      const result = await boidatasCollection.findOne(query);
 
-        if (!result) {
-          res.status(404).send("Biodata not found");
-          return;
-        }
-
-        res.send(result);
-      } catch (error) {
-        console.error("Error fetching biodata:", error);
-        res.status(500).send("Server Error");
-      }
+      res.send(result);
     });
 
     // filter
