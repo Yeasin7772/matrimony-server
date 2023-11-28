@@ -25,6 +25,19 @@ async function run() {
     const boidatasCollection = client.db("biodataDb").collection("boidatas");
     const favoritesCollection = client.db("biodataDb").collection("favorites");
     const successCollection = client.db("biodataDb").collection("success");
+    const requestCollection = client.db("biodataDb").collection("requests");
+
+
+
+// request-biodata collection 
+
+app.post("/request", async (req, res) => {
+  const item = req.body;
+  const result = await requestCollection.insertOne(item);
+  res.send(result);
+});
+
+
 
     // favorites
 
@@ -41,6 +54,14 @@ async function run() {
       } catch (error) {
         res.status(500).send({ error: "Server Error" });
       }
+    });
+
+    // delete favorites
+    app.delete("/favorites/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await favoritesCollection.deleteOne(query);
+      res.send(result);
     });
 
     // jwt related api
@@ -150,14 +171,24 @@ async function run() {
       }
     });
 
+    // problem here
+  
+
+    // app.get("/boidatas/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   const query = { email: email };
+    //   const result = await boidatasCollection.findOne(query);
+    //   res.send(result);
+    // });
+
     app.get("/boidatas/:id", async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) };
       const result = await boidatasCollection.findOne(query);
-
       res.send(result);
     });
+
+    // problem finish
 
     // filter
     app.get("/biodatas/filter", async (req, res) => {
@@ -188,20 +219,12 @@ async function run() {
 
     // find email
 
-    // app.get("/biodatas/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { email: email };
-    //   const result = await boidatasCollection.findOne(query);
-    //   res.send(result);
-    // });
-
     app.post("/biodatas", async (req, res) => {
       const item = req.body;
       const result = await boidatasCollection.insertOne(item);
       res.send(result);
     });
 
-    
     // get success data
 
     app.get("/success", async (req, res) => {
