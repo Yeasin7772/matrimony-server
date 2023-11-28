@@ -39,6 +39,7 @@ async function run() {
         biodataId,
         selfBiodataId,
         selfEmail,
+        name,
       } = req.body;
 
       try {
@@ -57,10 +58,11 @@ async function run() {
           biodataId,
           selfBiodataId,
           selfEmail,
+          name
           // Add other necessary details to store in your database
         };
 
-        // Insert the payment document into the MongoDB collection
+     
         const result = await paymentCollection.insertOne(paymentDocument);
 
         res.send({ success: true, message: "Payment successful" });
@@ -74,6 +76,14 @@ async function run() {
       const result = await paymentCollection.find().toArray();
       res.send(result)
     });
+
+    app.delete("/payment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentCollection.deleteOne(query);
+      res.send(result);
+    });
+
 
     
 
