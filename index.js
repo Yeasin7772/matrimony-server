@@ -2,6 +2,7 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -26,18 +27,72 @@ async function run() {
     const favoritesCollection = client.db("biodataDb").collection("favorites");
     const successCollection = client.db("biodataDb").collection("success");
     const requestCollection = client.db("biodataDb").collection("requests");
+    const paymentCollection = client.db("biodataDb").collection("payment");
 
+    // payment collection
 
+    app.post("/payment", async (req, res) => {
+      const {
+        amount,
+        source,
+        description,
+        biodataId,
+        selfBiodataId,
+        selfEmail,
+      } = req.body;
 
-// request-biodata collection 
+      try {
+        const charge = await stripe.charges.create({
+          amount,
+          currency: "usd",
+          source,
+          description,
+        });
 
-app.post("/request", async (req, res) => {
-  const item = req.body;
-  const result = await requestCollection.insertOne(item);
-  res.send(result);
-});
+        // Create a payment document
+        const paymentDocument = {
+          amount: charge.amount,
+          paymentMethod: charge.payment_method,
+          description: charge.description,
+          biodataId,
+          selfBiodataId,
+          selfEmail,
+          // Add other necessary details to store in your database
+        };
 
+        // Insert the payment document into the MongoDB collection
+        const result = await paymentCollection.insertOne(paymentDocument);
 
+        res.send({ success: true, message: "Payment successful" });
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        res.status(500).json({ success: false, error: "Payment failed" });
+      }
+    });
+
+    app.get("/payment", async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result)
+    });
+
+    
+
+    // request-biodata collection
+
+    app.post("/request", async (req, res) => {
+      const item = req.body;
+      const result = await requestCollection.insertOne(item);
+      res.send(result);
+    });
+
+    app.get("/request", async (req, res) => {
+      try {
+        const result = await requestCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Server Error" });
+      }
+    });
 
     // favorites
 
@@ -172,7 +227,6 @@ app.post("/request", async (req, res) => {
     });
 
     // problem here
-  
 
     // app.get("/boidatas/:email", async (req, res) => {
     //   const email = req.params.email;
@@ -189,6 +243,30 @@ app.post("/request", async (req, res) => {
     });
 
     // problem finish
+
+    // for payment
+    // app.get("/boidatas/:biodataId", async (req, res) => {
+    //   try {
+    //     const biodataId = req.params.biodataId;
+
+    //     // Check if biodataId is a valid integer
+    //     if (!Number.isInteger(+biodataId)) {
+    //       return res.status(400).send("Invalid biodataId format");
+    //     }
+
+    //     const query = { biodataId: biodataId };
+    //     const result = await boidatasCollection.findOne(query);
+
+    //     if (result) {
+    //       res.send(result);
+    //     } else {
+    //       res.status(404).send("Biodata not found");
+    //     }
+    //   } catch (error) {
+    //     console.error("Error fetching biodata:", error);
+    //     res.status(500).send("Internal Server Error");
+    //   }
+    // });
 
     // filter
     app.get("/biodatas/filter", async (req, res) => {
