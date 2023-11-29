@@ -144,7 +144,7 @@ async function run() {
       }
     });
 
-    // delete favorites
+    // delete favorites 
     app.delete("/favorites/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -161,7 +161,7 @@ async function run() {
       res.send({ token });
     });
 
-    // middleware
+    // middleware set 
 
     const verifyToken = (req, res, next) => {
       // console.log("inside verify token", req.headers.authorization);
