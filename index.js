@@ -30,7 +30,7 @@ async function run() {
     const paymentCollection = client.db("biodataDb").collection("payment");
     const premiumCollection = client.db("biodataDb").collection("premium");
 
-    // premium collection data
+    // premium collection 
 
     app.post("/premium", async (req, res) => {
       const item = req.body;
@@ -144,7 +144,7 @@ async function run() {
       }
     });
 
-    // delete favorites 
+    // delete favorites
     app.delete("/favorites/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -161,7 +161,7 @@ async function run() {
       res.send({ token });
     });
 
-    // middleware set 
+    // middleware
 
     const verifyToken = (req, res, next) => {
       // console.log("inside verify token", req.headers.authorization);
@@ -214,6 +214,23 @@ async function run() {
         res.send(result);
       }
     );
+    app.patch(
+      "/users/premium/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+
+        const updateDoc = {
+          $set: {
+            role: "premium",
+          },
+        };
+        const result = await usersCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
 
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       //console.log(req.headers);
@@ -235,6 +252,19 @@ async function run() {
         admin = user?.role === "admin";
       }
       res.send({ admin });
+    });
+    app.get("/users/premium/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let premium = false;
+      if (user) {
+        premium = user?.role === "premium";
+      }
+      res.send({ premium });
     });
 
     app.post("/users", async (req, res) => {
@@ -324,6 +354,12 @@ async function run() {
     });
 
     // get success data
+
+    app.post("/success", async (req, res) => {
+      const item = req.body;
+      const result = await successCollection.insertOne(item);
+      res.send(result);
+    });
 
     app.get("/success", async (req, res) => {
       try {

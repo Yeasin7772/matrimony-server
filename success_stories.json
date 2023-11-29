@@ -1,34 +1,39 @@
 [
   {
-    
+    "selfBiodataNumber": 123,
+    "partnerBiodataNumber": 456,
     "couple_image": "https://i.ibb.co/N9TtJRw/pexels-look-me-photography-19118295.jpg",
     "marriage_date": "2020-05-15",
     "review_star": 4.8,
     "success_text": "We met in college and overcame many challenges together."
   },
   {
-    
+    "selfBiodataNumber": 789,
+    "partnerBiodataNumber": 101,
     "couple_image": "https://i.ibb.co/ZXh0QrP/pexels-helena-lopes-1378849.jpg",
     "marriage_date": "2018-08-20",
     "review_star": 5.0,
     "success_text": "Our marriage has been a journey of love, growth, and joy."
   },
   {
-    
+    "selfBiodataNumber": 202,
+    "partnerBiodataNumber": 303,
     "couple_image": "https://i.ibb.co/sJpyZvw/pexels-andre-furtado-1417255.jpg",
     "marriage_date": "2019-01-10",
     "review_star": 4.5,
     "success_text": "Despite the ups and downs, we've built a strong bond."
   },
   {
-    
+    "selfBiodataNumber": 404,
+    "partnerBiodataNumber": 505,
     "couple_image": "https://i.ibb.co/zfXRQ5p/pexels-look-me-photography-19118310.jpg",
     "marriage_date": "2019-05-10",
     "review_star": 4.5,
     "success_text": "Despite the ups and downs, we've built a strong bond."
   },
   {
-    
+    "selfBiodataNumber": 606,
+    "partnerBiodataNumber": 707,
     "couple_image": "https://i.ibb.co/ZXh0QrP/pexels-helena-lopes-1378849.jpg",
     "marriage_date": "2010-05-20",
     "review_star": 5.0,
