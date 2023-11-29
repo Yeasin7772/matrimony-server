@@ -28,6 +28,27 @@ async function run() {
     const successCollection = client.db("biodataDb").collection("success");
     const requestCollection = client.db("biodataDb").collection("requests");
     const paymentCollection = client.db("biodataDb").collection("payment");
+    const premiumCollection = client.db("biodataDb").collection("premium");
+
+    // premium collection data
+
+    app.post("/premium", async (req, res) => {
+      const item = req.body;
+      const result = await premiumCollection.insertOne(item);
+      res.send(result);
+    });
+
+    app.get("/premium", async (req, res) => {
+      const result = await premiumCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.delete("/premium/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await premiumCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // payment collection
 
@@ -58,11 +79,10 @@ async function run() {
           biodataId,
           selfBiodataId,
           selfEmail,
-          name
+          name,
           // Add other necessary details to store in your database
         };
 
-     
         const result = await paymentCollection.insertOne(paymentDocument);
 
         res.send({ success: true, message: "Payment successful" });
@@ -74,7 +94,7 @@ async function run() {
 
     app.get("/payment", async (req, res) => {
       const result = await paymentCollection.find().toArray();
-      res.send(result)
+      res.send(result);
     });
 
     app.delete("/payment/:id", async (req, res) => {
@@ -83,9 +103,6 @@ async function run() {
       const result = await paymentCollection.deleteOne(query);
       res.send(result);
     });
-
-
-    
 
     // request-biodata collection
 
@@ -104,6 +121,12 @@ async function run() {
       }
     });
 
+    app.delete("/request/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await requestCollection.deleteOne(query);
+      res.send(result);
+    });
     // favorites
 
     app.post("/favorites", async (req, res) => {
@@ -238,12 +261,12 @@ async function run() {
 
     // problem here
 
-    // app.get("/boidatas/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { email: email };
-    //   const result = await boidatasCollection.findOne(query);
-    //   res.send(result);
-    // });
+    app.get("/boidatas-email/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await boidatasCollection.findOne(query);
+      res.send(result);
+    });
 
     app.get("/boidatas/:id", async (req, res) => {
       const id = req.params.id;
@@ -255,28 +278,15 @@ async function run() {
     // problem finish
 
     // for payment
-    // app.get("/boidatas/:biodataId", async (req, res) => {
-    //   try {
-    //     const biodataId = req.params.biodataId;
+    app.get("/boidatas/:biodataId", async (req, res) => {
+        const biodataId = req.params.biodataId;
+        const query = { biodataId: biodataId };
+        const result = await boidatasCollection.findOne(query);
+        res.send(result)
 
-    //     // Check if biodataId is a valid integer
-    //     if (!Number.isInteger(+biodataId)) {
-    //       return res.status(400).send("Invalid biodataId format");
-    //     }
+    });
+  
 
-    //     const query = { biodataId: biodataId };
-    //     const result = await boidatasCollection.findOne(query);
-
-    //     if (result) {
-    //       res.send(result);
-    //     } else {
-    //       res.status(404).send("Biodata not found");
-    //     }
-    //   } catch (error) {
-    //     console.error("Error fetching biodata:", error);
-    //     res.status(500).send("Internal Server Error");
-    //   }
-    // });
 
     // filter
     app.get("/biodatas/filter", async (req, res) => {
