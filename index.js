@@ -232,7 +232,7 @@ async function run() {
       }
     );
 
-    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/users",  async (req, res) => {
       //console.log(req.headers);
       const result = await usersCollection.find().toArray();
       res.send(result);
